@@ -42,15 +42,15 @@ import com.qualcomm.robotcore.util.Range;
  * the autonomous or the teleop period of an FTC match. The names of OpModes appear on the menu
  * of the FTC Driver Station. When an selection is made from the menu, the corresponding OpMode
  * class is instantiated on the Robot Controller and executed.
- *
+ * <p>
  * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
  * It includes all the skeletal structure that all linear OpModes contain.
- *
+ * <p>
  * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Get Ready", group="Linear Opmode")
+@TeleOp(name = "Get Ready", group = "Linear Opmode")
 //@Disabled
 public class GetReady extends LinearOpMode {
 
@@ -68,28 +68,39 @@ public class GetReady extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
-        robot.setArmTarget(0.9800d);
-        robot.armDrive.setPower(0.3d);
+        int turnsLeft = robot.setArmTarget(1.125d);
+        double armPower = robot.getArmPower(turnsLeft);
+        robot.armDrive.setPower(armPower);
 
         while (opModeIsActive() &&
-                (runtime.seconds() < 3d) &&
-                (robot.armDrive.isBusy()))
-        {
-            //wait for arm to reach
+                (runtime.seconds() < 10d) &&
+                (robot.armDrive.isBusy())) {
+            turnsLeft = robot.setArmTarget(1.125d);
+            armPower = robot.getArmPower(turnsLeft);
+            robot.armDrive.setPower(armPower);
         }
 
-        runtime.reset();
+        robot.armDrive.setPower(0d);
         robot.armServo.setPosition(1d);
         robot.handServo.setPosition(0d);
+        robot.markerServo.setPosition(0.1d);
 
-        robot.setArmTarget(0.72d);
-        robot.armDrive.setPower(0.3d);
+        sleep(2000L);
+
+        runtime.reset();
+        turnsLeft = robot.setArmTarget(0.725d);
+        armPower = robot.getArmPower(turnsLeft);
+        robot.armDrive.setPower(armPower);
 
         while (opModeIsActive() &&
-                (runtime.seconds() < 3d) &&
-                (robot.armDrive.isBusy()))
-        {
-            //wait for arm to reach
+                (runtime.seconds() < 10d) &&
+                (robot.armDrive.isBusy())) {
+            turnsLeft = robot.setArmTarget(0.725d);
+            armPower = robot.getArmPower(turnsLeft);
+            robot.armDrive.setPower(armPower);
         }
+
+        robot.tts.speak("Hello Aztec, make sure heading is zero and don't forget Team Marker.");
+        sleep(3000L);
     }
 }

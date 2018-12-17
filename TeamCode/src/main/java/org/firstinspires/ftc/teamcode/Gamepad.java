@@ -42,6 +42,12 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.android.AndroidTextToSpeech;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+import java.util.Locale;
 
 
 /**
@@ -69,7 +75,7 @@ public class Gamepad extends LinearOpMode {
     private final double SERVO_CYCLE = 50d;
     private final double SERVO_INCREMENT_MIN = 0.005d;
     private final double SERVO_INCREMENT_MAX = 0.01d;
-    private final double DRIVE_SPEED_MAX = 0.8d;
+    private final double DRIVE_SPEED_MAX = 1d;
 
     // Setup a variable for each drive wheel to save power level for telemetry
     double leftPower;
@@ -99,9 +105,9 @@ public class Gamepad extends LinearOpMode {
             }
 
             if (gamepad1.dpad_right || gamepad2.dpad_right) {
-                turn = 1d;
+                turn = 0.7d;
             } else if (gamepad1.dpad_left || gamepad2.dpad_left) {
-                turn = -1d;
+                turn = -0.7d;
             }
 
             ArmControl();
@@ -115,9 +121,15 @@ public class Gamepad extends LinearOpMode {
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Motors", "left (%.4f), right (%.4f)", leftPower, rightPower);
-            telemetry.addData("Servo", "Arm (%.4f) Hand (%.4f)", robot.armServo.getPosition(), robot.handServo.getPosition());
-            telemetry.addData("Arm", "pos (%.4f) pow (%.4f) enc (%d)", robot.armAngle.getVoltage(), robot.armDrive.getPower(), robot.armDrive.getCurrentPosition());
+            telemetry.addData("Motors", "left (%.4f), right (%.4f)",
+                    leftPower, rightPower);
+            telemetry.addData("Servo", "Arm (%.4f) Hand (%.4f)",
+                    robot.armServo.getPosition(), robot.handServo.getPosition());
+            telemetry.addData("Arm", "pos (%.4f) pow (%.4f) enc (%d)",
+                    robot.armAngle.getVoltage(), robot.armDrive.getPower(), robot.armDrive.getCurrentPosition());
+            telemetry.addData("Heading", "%.4f", robot.getHeading());
+            telemetry.addData("Distance (inch)",
+                    String.format(Locale.US, "%.2f", robot.sensorDistance.getDistance(DistanceUnit.INCH)));
             telemetry.update();
         }
     }
@@ -137,37 +149,36 @@ public class Gamepad extends LinearOpMode {
             armPower = -Range.scale(gamepad1.right_trigger, 0d, 1d, 0d, 1d);
         }
 
-        if (gamepad2.left_bumper || gamepad1.left_bumper) { //set arm to drop mineral
+        if (gamepad2.left_bumper || gamepad1.left_bumper || gamepad2.y || gamepad1.y) { //set arm to drop mineral
             if (armSequence == 0) {
-                boolean isDone = robot.setArmTarget(1.3050d);
-
-                armPower = robot.ARM_POWER;
-                if (isDone) {
-                    armPosition = 0.2922d;
-                    handPosition = 0.3661d;
+                int turnsLeft = robot.setArmTarget(1.3050d);
+                armPower = robot.getArmPower(turnsLeft);
+                if (turnsLeft <= 100) {
+                    if (gamepad2.left_bumper || gamepad1.left_bumper) {
+                        armPosition = 0.3489d;
+                        handPosition = 0.3439d;
+                    } else {
+                        handPosition = 0d;
+                        armPosition = 1d;
+                    }
                     armSequence = 2;
                 }
             }
         } else if (gamepad2.right_bumper || gamepad1.right_bumper) { //set arm to pickup mineral
             if (armSequence == 0) {
-                boolean isDone = robot.setArmTarget(1.8250d);
-                armPower = robot.ARM_POWER;
-                if (isDone) {
-                    armPosition = 0.0739d;
-                    handPosition = 0.7986d;
+                int turnsLeft = robot.setArmTarget(2.2600d);
+                armPower = robot.getArmPower(turnsLeft);
+                armPosition = 0.1528d;
+                handPosition = 0.8261d;
+                if (turnsLeft <= 100) {
                     armSequence = 3;
                 }
             }
-
-            if (armSequence == 3) {
-                robot.setArmTarget(2.1060d);
-                armPower = robot.ARM_POWER;
-            }
-        } else if (gamepad2.x || gamepad1.x) { //retract arm
+        } else if (gamepad2.x || gamepad1.x)         { //retract arm
             if (armSequence == 0) {
-                boolean isDone = robot.setArmTarget(0.9800d);
+                int turnsLeft = robot.setArmTarget(0.9800d);
                 armPower = robot.ARM_POWER;
-                if (isDone) {
+                if (turnsLeft <= 100) {
                     handPosition = 0d;
                     armPosition = 1d;
                     armSequence = 1;
@@ -175,7 +186,7 @@ public class Gamepad extends LinearOpMode {
             }
 
             if (armSequence == 1) {
-                robot.setArmTarget(0.7540d);
+                robot.setArmTarget(0.7450d);
                 armPower = robot.ARM_POWER;
             }
         } else {
