@@ -29,22 +29,11 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.disnodeteam.dogecv.CameraViewDisplay;
-import com.disnodeteam.dogecv.DogeCV;
-import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.opencv.core.Size;
-
-import java.util.Locale;
 
 /**
  * This file illustrates the concept of driving a path based on encoder counts.
@@ -74,7 +63,7 @@ import java.util.Locale;
  */
 
 @Autonomous(name = "Rover Ruckus", group = "Pushbot")
-//@Disabled
+@Disabled
 public class RoverRuckus15091_DepotSide extends RoverRuckus15091 {
 
     @Override
@@ -83,12 +72,20 @@ public class RoverRuckus15091_DepotSide extends RoverRuckus15091 {
          * Initialize the drive system variables.
          * The init() method of the hardware class does all the work here
          */
+
+
         initDetector(new Size(100d, 480d), 120d);
         this.robot.init(hardwareMap);
 
         resetMotors();
-        this.robot.tts.speak("Hello Aztec, make sure heading is zero and don't forget Team Marker.");
+
+        while (!robot.imu.isGyroCalibrated()) {
+            idle();
+        }
+
         Telemetry.Item headingItem = telemetry.addData("Heading: ", "%.4f", this.robot.getHeading());
+
+        robot.beep();
 
         // Wait for the game to start (driver presses PLAY)
         while (!isStarted()) {
@@ -102,27 +99,27 @@ public class RoverRuckus15091_DepotSide extends RoverRuckus15091 {
             landing();
 
             // Then turn and stop at gold mineral
-            sampling();
+            sampling(-111d);
 
             //base on gold mineral position, continue path for 1,2,3
             switch (goldMineralLocation) {
                 case 1:
-                    gyroDrive(DRIVE_SPEED, -26d, targetHeading);
-                    gyroDrive(DRIVE_SPEED, -42d, 150d);
+                    gyroDrive(DRIVE_SPEED, 29d, targetHeading);
+                    gyroDrive(DRIVE_SPEED, 42d, 140d);
                     break;
                 case 2:
-                    gyroDrive(DRIVE_SPEED, -11d, targetHeading);
-                    gyroDrive(DRIVE_SPEED, -36d, 180);
+                    gyroDrive(DRIVE_SPEED, 11d, targetHeading);
+                    gyroDrive(DRIVE_SPEED, 37d, 175);
                     break;
                 case 3:
-                    gyroDrive(DRIVE_SPEED, -26d, targetHeading);
-                    gyroDrive(DRIVE_SPEED, -34d, -150d);
+                    gyroDrive(DRIVE_SPEED, 27d, targetHeading);
+                    gyroDrive(DRIVE_SPEED, 31d, -155d);
                     break;
             }
 
             this.robot.markerServo.setPosition(1d);
             sleep(500L);
-            detector.disable();
+            robot.beep();
 
             /*gyroTurn(TURN_SPEED, 90d);
             gyroDrive(DRIVE_SPEED, -4, 90d);
@@ -130,5 +127,7 @@ public class RoverRuckus15091_DepotSide extends RoverRuckus15091 {
             gyroDrive(DRIVE_SPEED, -24d, 50d);
             gyroDrive(DRIVE_SPEED, -24d, 45d);*/
         }
+
+        detector.disable();
     }
 }

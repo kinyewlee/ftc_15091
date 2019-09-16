@@ -13,26 +13,25 @@ import org.opencv.core.Size;
 public abstract class RoverRuckus15091 extends LinearOpMode {
 
     /* Declare OpMode members. */
-    protected Hardware15091 robot = new Hardware15091();   // Use a Pushbot's hardware
-    protected ElapsedTime runtime = new ElapsedTime();
-    protected int goldMineralLocation = -1;
-    protected double targetHeading;
+    Hardware15091 robot = new Hardware15091();   // Use a Pushbot's hardware
+    private ElapsedTime runtime = new ElapsedTime();
+    int goldMineralLocation = -1;
+    double targetHeading;
 
-    static final double COUNTS_PER_MOTOR_REV = 288;    // eg: TETRIX Motor Encoder
-    static final double DRIVE_GEAR_REDUCTION = 20d / 10d;     // This is < 1.0 if geared UP, eg. 26d/10d
-    static final double WHEEL_DIAMETER_INCHES = 3.5;     // For figuring circumference
-    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-            (WHEEL_DIAMETER_INCHES * 3.1415);
+    private static final double COUNTS_PER_MOTOR_REV = 288d;    // eg: TETRIX Motor Encoder
+    private static final double DRIVE_GEAR_REDUCTION = 26d / 15d;     // This is < 1.0 if geared UP, eg. 26d/10d
+    private static final double WHEEL_DIAMETER_INCHES = 3.54331d;     // For figuring circumference
+    private static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+            (WHEEL_DIAMETER_INCHES * 3.14159265359d);
     static final double DRIVE_SPEED = 1d;
-    static final double TURN_SPEED = 1d;
 
-    static final double HEADING_THRESHOLD = 1;      // As tight as we can make it with an integer gyro
-    static final double P_TURN_COEFF = 0.1;     // Larger is more responsive, but also less stable
-    static final double P_DRIVE_COEFF = 0.15;     // Larger is more responsive, but also less stable
+    private static final double HEADING_THRESHOLD = 1d;      // As tight as we can make it with an integer gyro
+    private static final double P_TURN_COEFF = 0.09d;     // Larger is more responsive, but also less stable
+    private static final double P_DRIVE_COEFF = 0.16d;     // Larger is more responsive, but also less stable
 
-    protected GoldAlignDetector detector;
+    GoldAlignDetector detector;
 
-    protected final void initDetector(Size alignSize, double alignPosOffset) {
+    final void initDetector(Size alignSize, double alignPosOffset) {
         // Set up detector
         detector = new GoldAlignDetector(); // Create detector
         detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance()); // Initialize it with the app context and camera
@@ -53,7 +52,7 @@ public abstract class RoverRuckus15091 extends LinearOpMode {
         detector.enable(); // Start the detector!
     }
 
-    protected final void resetMotors() {
+    final void resetMotors() {
         robot.leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -64,16 +63,18 @@ public abstract class RoverRuckus15091 extends LinearOpMode {
         robot.rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-    protected void sampling() {
-        // turn robot 180 degree to the right
-        gyroTurn(0.8d, -111d);
+    void sampling(double startingAngle) {
+        robot.beep();
+
+        // turn robot -111 degree to the right
+        gyroTurn(0.8d, startingAngle);
 
         //scan gold mineral for position 1,2,3
         targetHeading = robot.getHeading();
         for (int i = 0; i < 20; i++) {
             if (!detector.getAligned()) {
                 targetHeading -= 6d;
-                gyroTurn(TURN_SPEED, targetHeading);
+                gyroTurn(DRIVE_SPEED, targetHeading);
             } else {
                 if (i < 6) {
                     goldMineralLocation = 1;
@@ -89,30 +90,33 @@ public abstract class RoverRuckus15091 extends LinearOpMode {
         }
 
         //double goldMineralDistance = robot.sensorDistance.getDistance(DistanceUnit.INCH);
-        robot.tts.speak("Gold on position " + goldMineralLocation);
+        robot.speak("Gold on position " + goldMineralLocation);
     }
 
-    protected final void landing() {
+    final void landing() {
+        robot.beep();
+
         robot.armServo.setPosition(1d);
         robot.handServo.setPosition(0d);
         robot.markerServo.setPosition(0.1d);
         robot.leftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.rightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        robot.setArmTarget(1.2470d);
+        robot.setArmTarget(1.218d);
         robot.armDrive.setPower(1d);
-        sleep(10L);
-        robot.leftDrive.setPower(-0.4d);
-        robot.rightDrive.setPower(-0.4d);
+        sleep(15L);
+        robot.leftDrive.setPower(0.32d);
+        robot.rightDrive.setPower(0.32d);
         while (opModeIsActive() && robot.armDrive.isBusy()) {
             //wait for motor to finish
+            idle();
         }
 
         robot.armDrive.setPower(0d);
         robot.leftDrive.setPower(0d);
         robot.rightDrive.setPower(0d);
 
-        robot.tts.speak("Landing complete");
+        robot.speak("Landing complete");
 
         robot.leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -130,8 +134,8 @@ public abstract class RoverRuckus15091 extends LinearOpMode {
      *  3) Driver stops the opmode running.
      */
     protected final void encoderDrive(double speed,
-                             double leftInches, double rightInches,
-                             double timeoutS) {
+                                      double leftInches, double rightInches,
+                                      double timeoutS) {
         int newLeftTarget;
         int newRightTarget;
 
@@ -200,9 +204,9 @@ public abstract class RoverRuckus15091 extends LinearOpMode {
         robot.rightDrive.setPower(0);
     }
 
-    protected final void gyroDrive(double speed,
-                          double distance,
-                          double angle) {
+    final void gyroDrive(double speed,
+                         double distance,
+                         double angle) {
 
         int newLeftTarget;
         int newRightTarget;
@@ -245,8 +249,8 @@ public abstract class RoverRuckus15091 extends LinearOpMode {
                 if (distance < 0)
                     steer *= -1.0;
 
-                leftSpeed = speed + steer;
-                rightSpeed = speed - steer;
+                leftSpeed = speed - steer;
+                rightSpeed = speed + steer;
 
                 // Normalize speeds if either one exceeds +/- 1.0;
                 max = Math.max(Math.abs(leftSpeed), Math.abs(rightSpeed));
@@ -277,7 +281,7 @@ public abstract class RoverRuckus15091 extends LinearOpMode {
         }
     }
 
-    protected final void gyroTurn(double speed, double angle) {
+    private void gyroTurn(double speed, double angle) {
 
         // keep looping while we are still active, and not on heading.
         while (opModeIsActive() && !onHeading(speed, angle, P_TURN_COEFF)) {
@@ -303,8 +307,8 @@ public abstract class RoverRuckus15091 extends LinearOpMode {
             onTarget = true;
         } else {
             steer = getSteer(error, PCoeff);
-            leftSpeed = speed * steer;
-            rightSpeed = -leftSpeed;
+            rightSpeed = speed * steer;
+            leftSpeed = -rightSpeed;
         }
 
         // Send desired speeds to motors.

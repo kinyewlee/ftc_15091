@@ -29,10 +29,13 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
+
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -48,13 +51,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name = "Get Ready", group = "Linear Opmode")
-@Disabled
-public class GetReady extends LinearOpMode {
-
-    // Declare OpMode members.
-    private ElapsedTime runtime = new ElapsedTime();
-    private Hardware15091 robot = new Hardware15091();
+@TeleOp(name = "Gamepad", group = "Linear Opmode")
+//@Disabled
+public class Gamepad_Alhambra extends Autonomous_Alhambra {
 
     @Override
     public void runOpMode() {
@@ -62,43 +61,40 @@ public class GetReady extends LinearOpMode {
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+        robot.beep();
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
+        runtime.reset();
 
-        if (opModeIsActive()) {
-            runtime.reset();
-
-            double armPower = robot.setArmTarget(1.125d).PowerToSet;
-            robot.armDrive.setPower(armPower);
-
-            while (opModeIsActive() &&
-                    (runtime.seconds() < 10d) &&
-                    (robot.armDrive.isBusy())) {
-                armPower = robot.setArmTarget(1.125d).PowerToSet;
-                robot.armDrive.setPower(armPower);
+        new Thread() {
+            public void run() {
+                while (opModeIsActive()) {// Show the elapsed game time and wheel power.
+                    double elapsed = runtime.milliseconds() - lastRuntime;
+                    lastRuntime = runtime.milliseconds();
+                    telemetry.addData("Status", "Run Time: %s (%.1f ms)",
+                            runtime.toString(), elapsed);
+                    telemetry.addData("Motors", "left (%.4f), right (%.4f), arm (%.4f)",
+                            robot.leftDrive.getPower(), robot.rightDrive.getPower(), robot.armDrive.getPower());
+                    telemetry.addData("Servo", "Arm (%.4f) Hand (%.4f)",
+                            robot.armServo.getPosition(), robot.handServo.getPosition());
+                    telemetry.addData("Arm", "pos (%.3f)",
+                            robot.armAngle.getVoltage());
+                    /*
+                    telemetry.addData("Heading", "%.4f", robot.getHeading());
+                    telemetry.addData("Distance (inch)",
+                            String.format(Locale.US, "%.2f", robot.sensorDistance.getDistance(DistanceUnit.INCH)));
+                    */
+                    telemetry.update();
+                }
             }
+        }.start();
 
-            robot.armDrive.setPower(0d);
-            robot.armServo.setPosition(1d);
-            robot.handServo.setPosition(0d);
-            robot.markerServo.setPosition(0.1d);
+        // run until the end of the match (driver presses STOP)
+        while (opModeIsActive()) {
+            ArmControl();
 
-            sleep(2000L);
-
-            runtime.reset();
-            armPower = robot.setArmTarget(0.725d).PowerToSet;
-            robot.armDrive.setPower(armPower);
-
-            while (opModeIsActive() &&
-                    (runtime.seconds() < 10d) &&
-                    (robot.armDrive.isBusy())) {
-                armPower = robot.setArmTarget(0.725d).PowerToSet;
-                robot.armDrive.setPower(armPower);
-            }
-
-            robot.speak("Hello Aztec, make sure heading is zero and don't forget Team Marker.");
-            sleep(3000L);
+            DriveControl();
         }
     }
 }

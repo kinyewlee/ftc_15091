@@ -33,15 +33,14 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.view.View;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Locale;
+
+import static com.qualcomm.robotcore.hardware.DistanceSensor.distanceOutOfRange;
 
 /*
  * This is an example LinearOpMode that shows how to use
@@ -72,7 +71,7 @@ public class SensorREVColorDistance extends LinearOpMode {
      * In this example, we  also use the distance sensor to display the distance
      * to the target object.  Note that the distance sensor saturates at around 2" (5 cm).
      */
-    Hardware15091 robot = new Hardware15091();
+    private HardwareAlhambra robot = new HardwareAlhambra();
 
     @Override
     public void runOpMode() {
@@ -108,9 +107,18 @@ public class SensorREVColorDistance extends LinearOpMode {
                     (int) (robot.sensorColor.blue() * SCALE_FACTOR),
                     hsvValues);
 
+            double frontDistance = robot.sensorDistance.getDistance(DistanceUnit.CM);
+            if (frontDistance != distanceOutOfRange && frontDistance <= 10d)
+            {
+                robot.beep();
+            }
+            if (robot.digitalFront.getState() == false) {
+                robot.beep();
+            }
+
             // send the info back to driver station using telemetry function.
             telemetry.addData("Distance (cm)",
-                    String.format(Locale.US, "%.02f", robot.sensorDistance.getDistance(DistanceUnit.CM)));
+                    String.format(Locale.US, "%.02f", frontDistance));
             telemetry.addData("Alpha", robot.sensorColor.alpha());
             telemetry.addData("Red  ", robot.sensorColor.red());
             telemetry.addData("Green", robot.sensorColor.green());

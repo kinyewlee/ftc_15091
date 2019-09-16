@@ -35,9 +35,12 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.android.AndroidTextToSpeech;
@@ -62,7 +65,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Servo channel:  Servo to open left claw:  "left_hand"
  * Servo channel:  Servo to open right claw: "right_hand"
  */
-class Hardware15091 {
+class HardwareAlhambra {
 
     static final double ARM_POWER = 1d;
     private static final double ARM_MIN = 0.709d, ARM_MAX = 2.4d;
@@ -74,19 +77,22 @@ class Hardware15091 {
     DcMotor armDrive = null;
     Servo armServo = null;
     Servo handServo = null;
-    Servo pickupServo = null;
-    Servo markerServo = null;
+    Servo doorServo = null;
     AnalogInput armAngle = null;
     BNO055IMU imu;
     ColorSensor sensorColor = null;
     DistanceSensor sensorDistance = null;
+    DistanceSensor sensorRange = null;
+    DigitalChannel digitalFront = null;
+    DigitalChannel digitalRear = null;
+
     private AndroidTextToSpeech tts = null;
     private int beepSoundID;
     /* local OpMode members. */
     private HardwareMap hwMap = null;
 
     /* Constructor */
-    Hardware15091() {
+    HardwareAlhambra() {
 
     }
 
@@ -131,17 +137,19 @@ class Hardware15091 {
         rightDrive = hwMap.dcMotor.get("motor_1");
         armDrive = hwMap.dcMotor.get("motor_2");
         armAngle = hwMap.analogInput.get("arm_angle");
-        armServo = hwMap.servo.get("servo_3");
-        pickupServo = hwMap.servo.get("servo_5");
-        handServo = hwMap.servo.get("servo_4");
-        markerServo = hwMap.servo.get("servo_0");
+        armServo = hwMap.servo.get("servo_4");
+        doorServo = hwMap.servo.get("servo_5");
+        handServo = hwMap.servo.get("servo_3");
         sensorColor = hwMap.get(ColorSensor.class, "sensor_color_distance");
-        sensorDistance = hwMap.get(DistanceSensor.class, "sensor_color_distance");
+        sensorDistance = hwMap.get(DistanceSensor.class, "sensor_distance");
+        digitalFront = hwMap.get(DigitalChannel.class, "sensor_digital_7");
+        digitalRear = hwMap.get(DigitalChannel.class, "sensor_digital_1");
+        sensorRange = hwMap.get(DistanceSensor.class, "sensor_range");
 
         leftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        leftDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftDrive.setDirection(DcMotor.Direction.REVERSE);
         rightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        rightDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightDrive.setDirection(DcMotor.Direction.REVERSE);
         armDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         tts = new AndroidTextToSpeech();

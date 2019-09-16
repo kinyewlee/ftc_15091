@@ -29,11 +29,16 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.opencv.core.Size;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+import static com.qualcomm.robotcore.hardware.DistanceSensor.distanceOutOfRange;
 
 /**
  * This file illustrates the concept of driving a path based on encoder counts.
@@ -62,9 +67,9 @@ import org.opencv.core.Size;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name = "Rover Ruckus (Crater)", group = "Pushbot")
-@Disabled
-public class RoverRuckus15091_CraterSide extends RoverRuckus15091 {
+@TeleOp(name = "Alhambra (Side A)", group = "Linear Opmode")
+//@Disabled
+public class Autonomous_Alhambra_SideA extends Autonomous_Alhambra {
     @Override
     public void runOpMode() {
         /*
@@ -72,7 +77,6 @@ public class RoverRuckus15091_CraterSide extends RoverRuckus15091 {
          * The init() method of the hardware class does all the work here
          */
         robot.init(hardwareMap);
-        initDetector(new Size(100d, 360d), 90d);
 
         resetMotors();
 
@@ -91,36 +95,66 @@ public class RoverRuckus15091_CraterSide extends RoverRuckus15091 {
         }
 
         if (opModeIsActive()) {
-            // The robot will be hung on the handle to start
-            // so, first thing to do is unlatch
-            landing();
+            runtime.reset();
 
-            // Then turn and stop at gold mineral
-            sampling(-112d);
+            //move arm up
+            moveArm(0.988d, true);
+            turnAndDrive(50d, 0d);
+            turnAndDrive(50d, 90d);
+            turnAndDrive(25d, 180d);
+            turnAndDrive(15d, 270d);
+            turnAndDrive(25d, 180d);
+            turnAndDrive(35d, 90d);
+            turnAndDrive(50d, 0d);
+            turnAndDrive(35d, 90d);
+            turnAndDrive(45d, 180d);
+            turnAndDrive(20d, 90d);
 
-            //base on gold mineral position, continue path for 1,2,3
-            switch (goldMineralLocation) {
-                case 1:
-                    gyroDrive(DRIVE_SPEED, 14d, targetHeading);
-                    gyroDrive(DRIVE_SPEED, 16d, 180);
-                    break;
-                case 2:
-                    gyroDrive(DRIVE_SPEED, 11d, targetHeading);
-                    gyroDrive(DRIVE_SPEED, 12d, 180);
-                    break;
-                case 3:
-                    gyroDrive(DRIVE_SPEED, 15d, targetHeading);
-                    gyroDrive(DRIVE_SPEED, 10d, 155d);
-                    break;
-            }
+            //scooping stuff
+            //move arm servo
+            robot.armServo.setPosition(0.7578d);
+            //move hand
+            robot.handServo.setPosition(0.13d);
+            //move arm down
+            moveArm(2.329d);
+
+            turnAndDrive(0d, 0d);
+            sleep(150L);
+
+            //open door
+            robot.doorServo.setPosition(1d);
+            sleep(100L);
+
+            turnAndDrive(35d, 0d, false);
+
+            //close door
+            robot.doorServo.setPosition(0.3d);
+            sleep(500L);
+
+            //move arm up and servo together
+            moveArm(0.988d, true);
+
+            turnAndDrive(-25d, 0d);
+            turnAndDrive(-25d, 90d);
+            turnAndDrive(-50d, 180d);
+            turnAndDrive(-37.5d, 90d);
+            turnAndDrive(-50d, 0d);
+            turnAndDrive(-35d, 90d);
+            turnAndDrive(-25d, 180d);
+            turnAndDrive(-15d, 270d);
+            turnAndDrive(-25d, 180d);
+            turnAndDrive(-40d, 90d);
+            turnAndDrive(-50d, 0d);
 
             robot.beep();
         }
 
-        detector.disable();
+        resetMotors(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        while(opModeIsActive()) {
-            idle();
+        while (opModeIsActive()) {
+            DriveControl();
+
+            ArmControl();
         }
     }
 }
