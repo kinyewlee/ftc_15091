@@ -428,10 +428,10 @@ public abstract class Autonomous_Alhambra extends LinearOpMode {
 
         if (gamepad2.left_bumper || gamepad1.left_bumper) { //set arm to drop mineral
             armPower = robot.setArmTarget(1d).PowerToSet;
-            armPosition = Range.scale(robot.armAngle.getVoltage(), 2.3d, 1d, 0.75d, 0.25d);
+            armPosition = Range.scale(robot.armAngle.getVoltage(), 1.6d, 0.9d, 0.55d, 0.15d);
         } else if (gamepad2.right_bumper || gamepad1.right_bumper) { //set arm to pickup mineral
-            armPower = robot.setArmTarget(2.329d).PowerToSet;
-            armPosition = 0.7578d;
+            armPower = robot.setArmTarget(1.7d).PowerToSet;
+            armPosition = Range.scale(robot.armAngle.getVoltage(), 1.6d, 0.9d, 0.55d, 0.15d);
             handPosition = 0.1d;
         } else {
             robot.armDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -468,7 +468,7 @@ public abstract class Autonomous_Alhambra extends LinearOpMode {
             if (!aPressed) {
                 aPressed = true;
                 doorFlag = !doorFlag;
-                robot.doorServo.setPosition(doorFlag ? 0.3d : 1d);
+                robot.doorServo.setPosition(doorFlag ? 0d : 0.45d);
             }
         } else {
             aPressed = false;
